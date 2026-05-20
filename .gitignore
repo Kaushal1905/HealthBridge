@@ -1,0 +1,30 @@
+# Virtual Environments
+kaushal/
+venv/
+env/
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Environment Variables (keep secrets safe!)
+.env
+
+# Mac files
+.DS_Store
+__MACOSX/
+
+# Node
+node_modules/
+frontend/build/
+
+# Logs
+*.log
+npm-debug.log*
