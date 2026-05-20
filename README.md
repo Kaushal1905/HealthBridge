@@ -10,14 +10,13 @@ A full-stack web application for managing hospital Out-Patient Department (OPD) 
 |---|---|
 | ![Login](screenshots/login.png) | ![Emergency](screenshots/emergency.png) |
 
-| Admin Dashboard |
-
+| Admin Dashboard | Register Patient |
 |---|---|
-| ![Admin](screenshots/admin-dashboard.png) |
+| ![Admin](screenshots/admin-dashboard.png) | ![Register](screenshots/register-patient.png) |
 
-| Register Patient | Queue Management |
-|---|---|
-| ![Register](screenshots/register-patient.png) | ![Queue](screenshots/queue.png) |
+| Queue Management |
+|---|
+| ![Queue](screenshots/queue.png) |
 
 ---
 
