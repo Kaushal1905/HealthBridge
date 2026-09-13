@@ -74,16 +74,26 @@ def register_patient():
         }
 
         result = patient_model.create_patient(patient_data)
+
+        # ✅ STEP 1: Auto-add newly registered patient to OPD Queue
+        from app.services.queue_service import add_patient_to_queue
+        priority = data.get("priority", "normal").lower()
+        if priority not in ["normal", "emergency"]:
+            priority = "normal"
+
+        queue_entry = add_patient_to_queue(
+            patient_id=patient_id,
+            name=patient_data["full_name"],
+            priority=priority,
+        )
+
         return jsonify({
-            "message": "Patient registered successfully",
+            "message": "Patient registered and added to queue successfully",
             "patient_id": patient_id,
             "full_name": patient_data["full_name"],
             "id": str(result.inserted_id),
+            "queue": queue_entry,
         }), 201
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
 
 # ── GET /api/patients ─────────────────────────────────────────
 @patient_bp.route("/", methods=["GET"])

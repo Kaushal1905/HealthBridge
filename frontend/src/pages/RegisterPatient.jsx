@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { registerPatient } from "../services/patientService";
+import { addToQueue } from "../services/queueService";
 import Navbar from "../components/Navbar";
 
 const RegisterPatient = () => {
@@ -11,12 +12,14 @@ const RegisterPatient = () => {
     full_name: "", age: "", gender: "", blood_group: "",
     contact_number: "", email: "", address: "",
     emergency_contact: "", medical_history: "",
+    priority: "normal",
   });
   const [fingerprintFile, setFingerprintFile] = useState(null);
   const [fingerprintPreview, setFingerprintPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successData, setSuccessData] = useState(null);
+  const [queueData, setQueueData] = useState(null);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -34,10 +37,24 @@ const RegisterPatient = () => {
     setError("");
     try {
       const data = new FormData();
-      Object.entries(formData).forEach(([key, val]) => data.append(key, val));
+      Object.entries(formData).forEach(([key, val]) => {
+        if (key !== "priority") data.append(key, val);
+      });
       if (fingerprintFile) data.append("fingerprint", fingerprintFile);
+
+      // 1. Register the patient
       const response = await registerPatient(data);
       setSuccessData(response);
+
+      // 2. Auto-add patient directly to the OPD Queue
+      try {
+        const patientId = response.patient_id || response.id;
+        const patientName = response.full_name || formData.full_name;
+        const qRes = await addToQueue(patientId, patientName, formData.priority || "normal");
+        setQueueData(qRes.data || qRes);
+      } catch (qErr) {
+        console.warn("Patient registered but queue addition had an issue:", qErr);
+      }
     } catch (err) {
       setError(err.response?.data?.error || err.message || "Registration failed.");
     } finally {
@@ -52,12 +69,36 @@ const RegisterPatient = () => {
         <div style={s.page}>
           <div style={s.successCard}>
             <div style={{ fontSize: "3rem" }}>✅</div>
-            <h2 style={s.successTitle}>Patient Registered!</h2>
+            <h2 style={s.successTitle}>Patient Registered & Queued!</h2>
             <div style={s.infoRow}><span style={s.infoLabel}>Patient ID</span><span style={s.infoValue}>{successData.patient_id}</span></div>
-            <div style={s.infoRow}><span style={s.infoLabel}>Name</span><span style={s.infoValue}>{successData.full_name}</span></div>
+            <div style={s.infoRow}><span style={s.infoLabel}>Name</span><span style={s.infoValue}>{successData.full_name || formData.full_name}</span></div>
+
+            {queueData && (
+              <>
+                <div style={s.infoRow}>
+                  <span style={s.infoLabel}>Queue Token</span>
+                  <span style={{ ...s.infoValue, color: "#1a73e8", fontSize: "1.1rem" }}>
+                    #{queueData.token || "Assigned"}
+                  </span>
+                </div>
+                <div style={s.infoRow}>
+                  <span style={s.infoLabel}>Queue Priority</span>
+                  <span style={{ ...s.infoValue, color: formData.priority === "emergency" ? "#e53e3e" : "#38a169", textTransform: "capitalize" }}>
+                    {formData.priority === "emergency" ? "🚨 Emergency" : "✅ Normal"}
+                  </span>
+                </div>
+              </>
+            )}
+
             <div style={s.btnRow}>
-              <button style={s.btn} onClick={() => navigate("/admin")}>Go to Dashboard</button>
-              <button style={{ ...s.btn, background: "#48bb78" }} onClick={() => { setSuccessData(null); setFormData({ full_name: "", age: "", gender: "", blood_group: "", contact_number: "", email: "", address: "", emergency_contact: "", medical_history: "" }); setFingerprintFile(null); setFingerprintPreview(null); }}>
+              <button style={s.btn} onClick={() => navigate("/queue")}>View in Queue</button>
+              <button style={{ ...s.btn, background: "#48bb78" }} onClick={() => {
+                setSuccessData(null);
+                setQueueData(null);
+                setFormData({ full_name: "", age: "", gender: "", blood_group: "", contact_number: "", email: "", address: "", emergency_contact: "", medical_history: "", priority: "normal" });
+                setFingerprintFile(null);
+                setFingerprintPreview(null);
+              }}>
                 Register Another
               </button>
             </div>
@@ -100,9 +141,22 @@ const RegisterPatient = () => {
                   <label style={s.label}>Blood Group</label>
                   <select style={s.input} name="blood_group" value={formData.blood_group} onChange={handleChange}>
                     <option value="">Select Blood Group</option>
-                    {["A+","A-","B+","B-","AB+","AB-","O+","O-"].map((bg) => (
+                    {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bg) => (
                       <option key={bg} value={bg}>{bg}</option>
                     ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div style={s.section}>
+              <h3 style={s.sectionTitle}>Queue & Priority</h3>
+              <div style={s.grid}>
+                <div style={s.fieldWrap}>
+                  <label style={s.label}>OPD Queue Priority *</label>
+                  <select style={s.input} name="priority" value={formData.priority} onChange={handleChange}>
+                    <option value="normal">✅ Normal OPD Queue</option>
+                    <option value="emergency">🚨 Emergency (High Priority)</option>
                   </select>
                 </div>
               </div>
@@ -147,7 +201,7 @@ const RegisterPatient = () => {
             </div>
 
             <button type="submit" disabled={loading} style={loading ? { ...s.submitBtn, opacity: 0.7 } : s.submitBtn}>
-              {loading ? "Registering…" : "Register Patient"}
+              {loading ? "Registering & Adding to Queue…" : "Register & Add to Queue"}
             </button>
           </form>
         </div>
