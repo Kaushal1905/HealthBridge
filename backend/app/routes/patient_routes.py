@@ -94,6 +94,8 @@ def register_patient():
             "id": str(result.inserted_id),
             "queue": queue_entry,
         }), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # ── GET /api/patients ─────────────────────────────────────────
 @patient_bp.route("/", methods=["GET"])
