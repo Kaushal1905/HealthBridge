@@ -36,3 +36,21 @@ export const logoutUser = () => {
   localStorage.removeItem("role");
   localStorage.removeItem("name");
 };
+// ✅ Google OAuth Login
+export const googleLoginUser = async (credential) => {
+  const response = await fetch(`${API_URL}/google`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ credential }),
+  });
+
+  const data = await response.json();
+
+  if (response.ok && data.token) {
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("role", data.role);
+    localStorage.setItem("name", data.name);
+  }
+
+  return data;
+};

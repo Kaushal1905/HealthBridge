@@ -4,6 +4,7 @@ from app.utils.db import get_db
 import jwt
 import os
 import datetime
+import requests
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -102,6 +103,61 @@ def login():
             }), 200
 
         return jsonify({"message": "Invalid credentials"}), 401
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+# ── GOOGLE AUTH ───────────────────────────────────────────────────────────────
+@auth_bp.route("/google", methods=["POST"])
+def google_auth():
+    try:
+        data = request.get_json() or {}
+        credential = data.get("credential")
+
+        if not credential:
+            return jsonify({"message": "Google token missing"}), 400
+
+        # Verify the Google ID token with Google's tokeninfo API
+        google_res = requests.get(
+            f"https://oauth2.googleapis.com/tokeninfo?id_token={credential}",
+            timeout=10,
+        )
+
+        if google_res.status_code != 200:
+            return jsonify({"message": "Invalid Google token"}), 401
+
+        google_user = google_res.json()
+        email = google_user.get("email")
+        name = google_user.get("name") or email.split("@")[0]
+
+        if not email:
+            return jsonify({"message": "Unable to get email from Google"}), 400
+
+        db = get_db()
+        user = db.users.find_one({"$or": [{"email": email}, {"username": email}]})
+
+        # If user does not exist yet, auto-create as a doctor
+        if not user:
+            new_user = {
+                "username": email,
+                "email": email,
+                "name": name,
+                "role": "doctor",
+                "department": "General Medicine",
+                "auth_provider": "google",
+                "created_at": datetime.datetime.utcnow(),
+            }
+            res = db.users.insert_one(new_user)
+            new_user["_id"] = res.inserted_id
+            user = new_user
+
+        token = _make_token(user, user.get("username", email))
+
+        return jsonify({
+            "message": "Google login successful",
+            "token": token,
+            "role": user.get("role", "doctor"),
+            "name": user.get("name", name),
+        }), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

@@ -1,6 +1,7 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { googleLoginUser } from "../services/authService";
 
 const Login = () => {
   const { login } = useContext(AuthContext);
@@ -12,6 +13,47 @@ const Login = () => {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const GOOGLE_CLIENT_ID =
+    process.env.REACT_APP_GOOGLE_CLIENT_ID ||
+    "142429608222-nb86ur924btt1b4vkukjgd7rg2f4uki1.apps.googleusercontent.com";
+
+  const handleGoogleResponse = async (response) => {
+    setLoading(true);
+    setError("");
+    try {
+      const data = await googleLoginUser(response.credential);
+      if (data && data.token) {
+        navigate(data.role === "admin" ? "/admin" : "/doctor");
+      } else {
+        setError(data.message || "Google sign-in failed.");
+      }
+    } catch {
+      setError("Unable to connect with server for Google Sign-In.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    /* global google */
+    if (window.google) {
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleResponse,
+      });
+
+      window.google.accounts.id.renderButton(
+        document.getElementById("googleSignInBtn"),
+        {
+          theme: "outline",
+          size: "large",
+          width: 320,
+          text: "continue_with",
+          shape: "rectangular",
+        }
+      );
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -81,8 +123,13 @@ const Login = () => {
               Sign Up here
             </Link>
           </p>
-
         </form>
+        <div style={{ display: "flex", alignItems: "center", margin: "20px 0" }}>
+          <div style={{ flex: 1, height: "1px", background: "#e2e8f0" }}></div>
+          <span style={{ padding: "0 10px", color: "#a0aec0", fontSize: "0.82rem" }}>OR</span>
+          <div style={{ flex: 1, height: "1px", background: "#e2e8f0" }}></div>
+        </div>
+        <div id="googleSignInBtn" style={{ display: "flex", justifyContent: "center" }}></div>
         <div style={{ textAlign: "center", marginTop: "20px" }}>
           <Link
             to="/emergency"
