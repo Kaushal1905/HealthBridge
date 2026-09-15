@@ -20,36 +20,54 @@ def _make_token(user, username):
     }
     return jwt.encode(payload, secret, algorithm="HS256")
 
-
 # ── REGISTER ──────────────────────────────────────────────────────────────────
 @auth_bp.route("/register", methods=["POST"])
 def register():
     try:
         db = get_db()
-        data = request.get_json()
+        data = request.get_json() or {}
 
         username = data.get("username", "").strip()
         password = data.get("password", "")
+        name = data.get("name", "").strip() or username
+        email = data.get("email", "").strip()
         role = data.get("role", "doctor")
+        department = data.get("department", "General Medicine").strip()
 
         if not username or not password:
             return jsonify({"message": "Username and password are required"}), 400
 
         if db.users.find_one({"username": username}):
-            return jsonify({"message": "User already exists"}), 400
+            return jsonify({"message": "Username is already taken"}), 400
 
-        db.users.insert_one({
+        if email and db.users.find_one({"email": email}):
+            return jsonify({"message": "Email is already registered"}), 400
+
+        user_doc = {
             "username": username,
+            "name": name,
+            "email": email,
             "password": generate_password_hash(password),
             "role": role,
-        })
+            "department": department,
+            "created_at": datetime.datetime.utcnow(),
+        }
 
-        return jsonify({"message": "User registered successfully"}), 201
+        res = db.users.insert_one(user_doc)
+        user_doc["_id"] = res.inserted_id
+
+        # Generate token for instant login upon successful registration
+        token = _make_token(user_doc, username)
+
+        return jsonify({
+            "message": "Account created successfully",
+            "token": token,
+            "role": role,
+            "name": name,
+        }), 201
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
 # ── LOGIN ──────────────────────────────────────────────────────────────────────
 @auth_bp.route("/login", methods=["POST"])
 def login():

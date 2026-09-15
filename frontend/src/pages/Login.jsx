@@ -44,7 +44,7 @@ const Login = () => {
         {error && <div style={s.error}>{error}</div>}
 
         <form onSubmit={handleSubmit} style={s.form}>
-          
+
           {/* ✅ Username Field */}
           <label style={s.label}>Username</label>
           <input
@@ -75,6 +75,13 @@ const Login = () => {
           >
             {loading ? "Signing in…" : "Sign In"}
           </button>
+          <p style={{ marginTop: "16px", fontSize: "0.88rem", color: "#718096" }}>
+            Don't have an account?{" "}
+            <Link to="/signup" style={{ color: "#1a73e8", fontWeight: 600, textDecoration: "none" }}>
+              Sign Up here
+            </Link>
+          </p>
+
         </form>
         <div style={{ textAlign: "center", marginTop: "20px" }}>
           <Link
