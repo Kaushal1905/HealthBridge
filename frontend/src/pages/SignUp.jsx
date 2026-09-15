@@ -76,7 +76,7 @@ const SignUp = () => {
 
                 {error && <div style={s.error}>{error}</div>}
 
-                <form onSubmit={handleSubmit} style={s.form}>
+                <form onSubmit={handleSubmit} style={s.form} autoComplete="off">
                     <label style={s.label}>Full Name *</label>
                     <input
                         type="text"
@@ -84,6 +84,7 @@ const SignUp = () => {
                         placeholder="e.g. Dr. Jane Doe"
                         value={formData.name}
                         onChange={handleChange}
+                        autoComplete="off"
                         required
                         style={s.input}
                     />
@@ -97,6 +98,7 @@ const SignUp = () => {
                                 placeholder="Choose username"
                                 value={formData.username}
                                 onChange={handleChange}
+                                autoComplete="off"
                                 required
                                 style={s.input}
                             />
@@ -107,6 +109,7 @@ const SignUp = () => {
                                 name="role"
                                 value={formData.role}
                                 onChange={handleChange}
+                                autoComplete="new-password"
                                 style={s.input}
                             >
                                 <option value="doctor">🩺 Doctor</option>
