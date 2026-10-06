@@ -72,7 +72,7 @@ const SignUp = () => {
             <div style={s.card}>
                 <div style={s.logo}>🏥</div>
                 <h1 style={s.title}>Create Account</h1>
-                <p style={s.subtitle}>Sign up for Smart OPD System</p>
+                <p style={s.subtitle}>Sign up for Arogya — Smart OPD System</p>
 
                 {error && <div style={s.error}>{error}</div>}
 

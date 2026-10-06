@@ -40,6 +40,8 @@ const Login = () => {
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: handleGoogleResponse,
+        auto_select: false,
+        cancel_on_tap_outside: true,
       });
 
       window.google.accounts.id.renderButton(
@@ -50,10 +52,12 @@ const Login = () => {
           width: 320,
           text: "continue_with",
           shape: "rectangular",
+          logo_alignment: "left",
         }
       );
     }
   }, []);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -80,7 +84,7 @@ const Login = () => {
     <div style={s.page}>
       <div style={s.card}>
         <div style={s.logo}>🏥</div>
-        <h1 style={s.title}>Smart OPD System</h1>
+        <h1 style={s.title}>Arogya — Smart OPD System</h1>
         <p style={s.subtitle}>Sign in to your account</p>
 
         {error && <div style={s.error}>{error}</div>}

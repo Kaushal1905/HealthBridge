@@ -1,4 +1,4 @@
-# 🏥 HealthBridge — Smart OPD Management System
+# 🏥 Arogya — Smart OPD Management System
 
 A full-stack web application for managing hospital Out-Patient Department (OPD) operations. It supports patient registration with fingerprint identification, smart queue management, emergency handling, and role-based dashboards for doctors and admins.
 
@@ -48,7 +48,7 @@ A full-stack web application for managing hospital Out-Patient Department (OPD) 
 ## 📁 Project Structure
 
 ```
-healthbridge/
+arogya/
 ├── backend/
 │   ├── app/
 │   │   ├── routes/        # auth, patient, queue, medical, fingerprint, emergency
@@ -86,8 +86,8 @@ healthbridge/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/Kaushal1905/HealthBridge.git
-cd HealthBridge
+git clone https://github.com/Kaushal1905/Arogya.git
+cd Arogya
 ```
 
 ### 2. Backend Setup
